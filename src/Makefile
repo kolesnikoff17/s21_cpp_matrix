@@ -2,7 +2,7 @@ CC = g++
 
 CFLAGS = -Wall -Wextra -Werror -g
 GCOV_FLAGS := -fprofile-arcs -ftest-coverage
-LDFLAGS := 
+LDFLAGS := -lgtest
 
 SOURCES:= matrix.cc
 
@@ -23,7 +23,7 @@ $(TARGET_EXEC): create_dir $(OBJECTS)
 create_dir:
 	mkdir -p $(OBJ_DIR)
 
-test: main_tests.c $(HEADER) $(TARGET_EXEC)
+test: test/test.cc $(HEADER) $(TARGET_EXEC)
 	$(CC) $(CFLAGS) $^ -o test_test $(LDFLAGS)
 	./test_test
 
@@ -33,10 +33,11 @@ $(OBJ_DIR)/%.o: %.cc $(HEADER)
 clean:
 	$(RM) $(OBJ_DIR)
 	$(RM) $(TARGET_EXEC)
+	$(RM) test_test*
 
 lint:
 	cp ../materials/linters/.clang-format ./
-	clang-format -style=Google -n matrix.cc s21_matrix_oop.h
+	clang-format -n matrix.cc s21_matrix_oop.h
 	$(RM) .clang-format
 
 rebuild: clean all

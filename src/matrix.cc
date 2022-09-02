@@ -4,7 +4,10 @@ S21Matrix::S21Matrix() {
   rows_ = 3;
   cols_ = 3;
   p_ = new double*[rows_];
-  for (auto i : {0, 1, 2}) p_[i] = new double[cols_]();
+  for (int i = 0; i < rows_; ++i) {
+    p_[i] = new double[cols_]();
+    for (int j = 0; j < cols_; ++j) p_[i][j] = (i + 1) * j + 1;
+  }
 }
 
 S21Matrix::S21Matrix(int rows, int cols) : rows_(rows), cols_(cols) {
@@ -24,7 +27,7 @@ S21Matrix::S21Matrix(S21Matrix&& other) {
   p_ = other.p_;
   other.rows_ = 0;
   other.cols_ = 0;
-  other.~S21Matrix();
+  other.p_ = nullptr;
 }
 
 S21Matrix::~S21Matrix() {
@@ -37,15 +40,15 @@ S21Matrix::~S21Matrix() {
 void S21Matrix::set_rows(int rows) {
   if (rows < 1) throw std::invalid_argument("Rows cant be less than 1");
   if (rows < rows_) {
-    for (int i = rows - 1; i < rows_; ++i) delete[] p_[i];
+    for (int i = rows; i < rows_; ++i) delete[] p_[i];
   } else if (rows > rows_) {
     double** p = new double*[rows];
-    for (int i = 0; i < rows; ++i)
+    for (int i = 0; i < rows; ++i) {
+      p[i] = new double[cols_]();
       if (i < rows_)
         for (int j = 0; j < cols_; ++j) p[i][j] = p_[i][j];
-      else
-        p[i] = new double[cols_]();
-    delete[] p_;
+    }
+    this->~S21Matrix();
     p_ = p;
   }
   rows_ = rows;
@@ -53,14 +56,16 @@ void S21Matrix::set_rows(int rows) {
 
 void S21Matrix::set_cols(int cols) {
   if (cols < 1) throw std::invalid_argument("Columns cant be less than 1");
-  for (int i = 0; i < rows_; ++i) {
-    double* pi = new double[cols]();
-    for (int j = 0; j < cols; ++j)
-      if (j < cols_) pi[j] = p_[i][j];
-    delete[] p_[i];
-    p_[i] = pi;
+  if (cols != cols_) {
+    for (int i = 0; i < rows_; ++i) {
+      double* pi = new double[cols]();
+      for (int j = 0; j < cols; ++j)
+        if (j < cols_) pi[j] = p_[i][j];
+      delete[] p_[i];
+      p_[i] = pi;
+    }
+    cols_ = cols;
   }
-  cols_ = cols;
 }
 
 bool S21Matrix::EqMatrix(const S21Matrix& other) {
@@ -135,12 +140,13 @@ S21Matrix S21Matrix::CalcComplements() {
   if (rows_ != cols_) throw std::invalid_argument("The matrix is not square");
   if (rows_ == 1) return *this;
   S21Matrix res(rows_, cols_);
-  S21Matrix sub_matrix;
   for (int i = 0; i < rows_; ++i)
     for (int j = 0; j < cols_; ++j) {
-      sub_matrix = this->HandleMatrix(i, j);
+      S21Matrix sub_matrix = this->HandleMatrix(i, j);
       if (sub_matrix.rows_ == 2) {
         res.p_[i][j] = ((i + j) % 2 ? -1 : 1) * sub_matrix.TwoDet();
+      } else if (sub_matrix.rows_ == 1) {
+        res.p_[i][j] = ((i + j) % 2 ? -1 : 1) * sub_matrix.OneDet();
       } else {
         S21Matrix recursive = sub_matrix.CalcComplements();
         for (int k = 0; k < sub_matrix.rows_; ++k)
@@ -161,20 +167,20 @@ double S21Matrix::Determinant() {
 
 S21Matrix S21Matrix::InverseMatrix() {
   double det = this->Determinant();
-  if (fabs(det) < 1e7) throw std::invalid_argument("Matrix determinant is 0");
+  if (fabs(det) < 1e-7) throw std::invalid_argument("Matrix determinant is 0");
   S21Matrix complement = this->CalcComplements();
   S21Matrix trasposed = complement.Transpose();
   trasposed.MulNumber(1 / det);
   return trasposed;
 }
 
-double S21Matrix::operator()(int row, int col) {
+double& S21Matrix::operator()(int row, int col) {
   if (row >= rows_ || col >= cols_)
     throw std::out_of_range("Incorrect input, index is out of range");
   return p_[row][col];
 }
 
-double S21Matrix::operator()(int row, int col) const {
+double& S21Matrix::operator()(int row, int col) const {
   if (row >= rows_ || col >= cols_)
     throw std::out_of_range("Incorrect input, index is out of range");
   return p_[row][col];
@@ -186,10 +192,12 @@ bool S21Matrix::operator==(const S21Matrix& other) {
 
 S21Matrix& S21Matrix::operator=(const S21Matrix& other) {
   if (this == &other) return *this;
-  cols_ = other.cols_;
-  rows_ = other.rows_;
-  this->~S21Matrix();
-  p_ = other.p_;
+  this->set_cols(other.cols_);
+  this->set_rows(other.rows_);
+  // cols_ = other.cols_;
+  // rows_ = other.rows_;
+  for (int i = 0; i < rows_; ++i)
+    for (int j = 0; j < cols_; ++j) p_[i][j] = other.p_[i][j];
   return *this;
 }
 

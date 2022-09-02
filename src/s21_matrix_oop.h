@@ -40,8 +40,8 @@ class S21Matrix {
   double Determinant();
   S21Matrix InverseMatrix();
 
-  double operator()(int row, int col);
-  double operator()(int row, int col) const;
+  double& operator()(int row, int col);
+  double& operator()(int row, int col) const;
   bool operator==(const S21Matrix& other);
   S21Matrix& operator=(const S21Matrix& other);
   S21Matrix& operator+=(const S21Matrix& other);
@@ -53,6 +53,11 @@ class S21Matrix {
   S21Matrix& operator*=(const double num);
   friend S21Matrix operator*(double num, const S21Matrix& this_m);
   friend S21Matrix operator*(const S21Matrix& this_m, double num);
+
+  void PrintMatrix() {
+    for (int i = 0; i < rows_; ++i)
+      for (int j = 0; j < cols_; ++j) std::cout << p_[i][j] << std::endl;
+  }
 };
 
 S21Matrix operator*(double num, const S21Matrix& this_m);
