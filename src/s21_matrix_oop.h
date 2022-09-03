@@ -1,5 +1,5 @@
-#ifndef __S21MATRIX_H__
-#define __S21MATRIX_H__
+#ifndef SRC_S21_MATRIX_OOP_H_
+#define SRC_S21_MATRIX_OOP_H_
 
 #include <cmath>
 #include <exception>
@@ -12,7 +12,7 @@ class CustomException : public std::exception {
 
  public:
   // Constructor simply copies the message given to it to a fieild of a class
-  CustomException(char const* msg) { message_ = msg; }
+  explicit CustomException(char const* msg) { message_ = msg; }
   // What is default exception function that returns an explanatory string
   char const* what() { return message_; }
 };
@@ -79,4 +79,4 @@ class S21Matrix {
 S21Matrix operator*(double num, const S21Matrix& this_m);
 S21Matrix operator*(const S21Matrix& this_m, double num);
 
-#endif
+#endif  // SRC_S21_MATRIX_OOP_H_
