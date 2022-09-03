@@ -6,6 +6,14 @@ class S21MatrixTest : public ::testing::Test {
  protected:
   S21Matrix m1;
   S21Matrix m2;
+
+  void SetUp() {
+    for (int i = 0; i < m1.get_rows(); ++i)
+      for (int j = 0; j < m1.get_cols(); ++j) {
+        m1(i, j) = (i + 1) * j + 1;
+        m2(i, j) = (i + 1) * j + 1;
+      }
+  }
 };
 
 TEST(Other, RowsColsConstructorTest) {
@@ -14,6 +22,8 @@ TEST(Other, RowsColsConstructorTest) {
   EXPECT_EQ(2, m1.get_rows());
   for (int i = 0; i < m1.get_rows(); ++i)
     for (int j = 0; j < m1.get_cols(); ++j) EXPECT_DOUBLE_EQ(0, m1(i, j));
+
+  ASSERT_ANY_THROW(S21Matrix m2(0, 0));
 }
 
 TEST(Other, CopyConstructorTest) {
@@ -30,12 +40,12 @@ TEST(Other, CopyConstructorTest) {
         EXPECT_DOUBLE_EQ(0, m1(i, j));
 }
 
-TEST_F(S21MatrixTest, DefaultConstructorTest) {
+TEST(Other, DefaultConstructorTest) {
+  S21Matrix m1;
   EXPECT_EQ(3, m1.get_cols());
   EXPECT_EQ(3, m1.get_rows());
   for (int i = 0; i < m1.get_rows(); ++i)
-    for (int j = 0; j < m1.get_cols(); ++j)
-      EXPECT_DOUBLE_EQ((i + 1) * j + 1, m1(i, j));
+    for (int j = 0; j < m1.get_cols(); ++j) EXPECT_DOUBLE_EQ(0, m1(i, j));
 }
 
 TEST_F(S21MatrixTest, ParenthesesOperatorTest) {
@@ -46,6 +56,9 @@ TEST_F(S21MatrixTest, ParenthesesOperatorTest) {
         EXPECT_DOUBLE_EQ(10, m1(0, 0));
       else
         EXPECT_DOUBLE_EQ((i + 1) * j + 1, m1(i, j));
+
+  ASSERT_ANY_THROW(m1(5, 5));
+  ASSERT_ANY_THROW(m1(-5, -5));
 }
 
 TEST_F(S21MatrixTest, SetRowsTest) {
@@ -63,7 +76,8 @@ TEST_F(S21MatrixTest, SetRowsTest) {
         EXPECT_DOUBLE_EQ(0, m2(i, j));
       else
         EXPECT_DOUBLE_EQ((i + 1) * j + 1, m2(i, j));
-  //   EXPECT_THROW(m1.set_rows(0), std::invalid_argument);
+
+  ASSERT_ANY_THROW(m1.set_rows(0));
 }
 
 TEST_F(S21MatrixTest, SetColsTest) {
@@ -81,7 +95,8 @@ TEST_F(S21MatrixTest, SetColsTest) {
         EXPECT_DOUBLE_EQ(0, m2(i, j));
       else
         EXPECT_DOUBLE_EQ((i + 1) * j + 1, m2(i, j));
-  //   EXPECT_THROW(m1.set_cols(0), std::invalid_argument);
+
+  ASSERT_ANY_THROW(m1.set_cols(0));
 }
 
 TEST_F(S21MatrixTest, EqTest) {
@@ -98,9 +113,12 @@ TEST_F(S21MatrixTest, EqOperatorTest) {
 
 TEST_F(S21MatrixTest, AddTest) {
   m1.SumMatrix(m2);
+  S21Matrix m3(2, 2);
   for (int i = 0; i < m1.get_rows(); ++i)
     for (int j = 0; j < m1.get_cols(); ++j)
       EXPECT_DOUBLE_EQ(2 * ((i + 1) * j + 1), m1(i, j));
+
+  ASSERT_ANY_THROW(m1.SumMatrix(m3));
 }
 
 TEST_F(S21MatrixTest, AddAndAssignOperatorTest) {
@@ -119,8 +137,11 @@ TEST_F(S21MatrixTest, AddOperatorTest) {
 
 TEST_F(S21MatrixTest, SubTest) {
   m1.SubMatrix(m2);
+  S21Matrix m3(2, 2);
   for (int i = 0; i < m1.get_rows(); ++i)
     for (int j = 0; j < m1.get_cols(); ++j) EXPECT_DOUBLE_EQ(0, m1(i, j));
+
+  ASSERT_ANY_THROW(m1.SumMatrix(m3));
 }
 
 TEST_F(S21MatrixTest, SubAndAssignOperatorTest) {
@@ -175,6 +196,8 @@ TEST_F(S21MatrixTest, MulMatrixTest) {
         EXPECT_DOUBLE_EQ(34 + 19 * i, m1(i, j));
 
   S21Matrix m3(3, 1);
+  ASSERT_ANY_THROW(m3.MulMatrix(m2));
+
   for (int i = 0; i < m3.get_rows(); ++i) m3(i, 0) = 2;
   m2.MulMatrix(m3);
   EXPECT_EQ(1, m2.get_cols());
@@ -230,12 +253,18 @@ TEST_F(S21MatrixTest, CalcComplementsTest) {
   EXPECT_DOUBLE_EQ(70, m2(2, 0));
   EXPECT_DOUBLE_EQ(-2, m2(2, 1));
   EXPECT_DOUBLE_EQ(-22, m2(2, 2));
+
+  m2.set_cols(2);
+  ASSERT_ANY_THROW(m2.CalcComplements());
 }
 
 TEST_F(S21MatrixTest, DeterminantTest) {
   m1(1, 1) = -20;
   double det = m1.Determinant();
   EXPECT_DOUBLE_EQ(det, -92);
+
+  m2.set_cols(2);
+  ASSERT_ANY_THROW(m2.Determinant());
 }
 
 TEST_F(S21MatrixTest, InverseMatrixTest) {
